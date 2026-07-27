@@ -40,4 +40,6 @@ components to avoid requiring their shared libraries alongside the binary.
 
 The workflow pins Conan and CMake versions and uses GCC 12, which satisfies the
 current CuraEngine recipe. Older CuraEngine releases that use Conan 1 may need
-a separate legacy build workflow.
+a separate legacy build workflow. Python build-tool versions are kept in
+`requirements-build.txt`, which also provides a stable key for the GitHub
+Actions pip cache.
