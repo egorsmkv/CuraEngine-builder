@@ -36,7 +36,9 @@ The workflow runs:
 The script expects Linux, Git, Conan 2, CMake 3.23 or newer, and Ninja. It
 places output in `./dist`, or in the directory specified by `OUTPUT_DIR`.
 It builds the command-line engine without the optional Arcus and plugin
-components to avoid requiring their shared libraries alongside the binary.
+components and links Conan dependencies statically. The resulting release asset
+does not require Conan-provided shared libraries such as `libtbbmalloc.so.2` to
+be installed on the target machine.
 
 The workflow pins Conan and CMake versions and uses GCC 12, which satisfies the
 current CuraEngine recipe. Older CuraEngine releases that use Conan 1 may need

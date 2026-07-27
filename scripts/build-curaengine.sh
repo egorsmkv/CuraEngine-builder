@@ -72,13 +72,15 @@ fi
 conan config install https://github.com/Ultimaker/conan-config.git
 conan profile detect --force
 
-# Arcus and the plugin host are optional for command-line slicing. Disabling them
-# avoids shipping optional shared libraries beside the release executable.
+# Arcus and the plugin host are optional for command-line slicing. Disable them
+# and link Conan dependencies statically so the release is one executable rather
+# than an executable plus a collection of version-sensitive shared libraries.
 conan install . \
     --build=missing \
     --update \
     -s build_type=Release \
     -c tools.build:skip_test=True \
+    -o "*:shared=False" \
     -o enable_arcus=False \
     -o enable_plugins=False
 
