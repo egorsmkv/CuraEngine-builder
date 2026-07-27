@@ -62,6 +62,13 @@ if grep -q 'std::setprecision' "${obj_source}" \
     git apply "${BUILDER_ROOT}/patches/0001-curaengine-include-iomanip.patch"
 fi
 
+parts_view_header="include/geometry/PartsView.h"
+if grep -q 'size_t' "${parts_view_header}" \
+    && ! grep -Eq '^[[:space:]]*#[[:space:]]*include[[:space:]]*<cstddef>' "${parts_view_header}"; then
+    echo "Applying CuraEngine compatibility patch for <cstddef>"
+    git apply "${BUILDER_ROOT}/patches/0002-curaengine-include-cstddef.patch"
+fi
+
 conan config install https://github.com/Ultimaker/conan-config.git
 conan profile detect --force
 

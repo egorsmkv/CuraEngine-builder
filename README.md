@@ -45,5 +45,6 @@ a separate legacy build workflow. Python build-tool versions are kept in
 Actions pip cache.
 
 The build script conditionally applies the compatibility patches in `patches/`.
-For CuraEngine 5.13.0 this adds the missing standard `<iomanip>` include needed
-by its use of `std::setprecision` when compiling with GCC 12.
+For CuraEngine 5.13.0 these add the missing standard `<iomanip>` and `<cstddef>`
+includes needed by its uses of `std::setprecision` and `size_t` when compiling
+with GCC 12.

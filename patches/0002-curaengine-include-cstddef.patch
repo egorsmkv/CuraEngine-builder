@@ -1,0 +1,12 @@
+diff --git a/include/geometry/PartsView.h b/include/geometry/PartsView.h
+index d5553df..f966826 100644
+--- a/include/geometry/PartsView.h
++++ b/include/geometry/PartsView.h
+@@ -4,6 +4,7 @@
+ #ifndef GEOMETRY_PARTS_VIEW_H
+ #define GEOMETRY_PARTS_VIEW_H
+ 
++#include <cstddef>
+ #include <vector>
+ 
+ namespace cura
