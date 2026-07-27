@@ -21,9 +21,9 @@ binary → Run workflow**. Supply:
 - `release_tag`: an existing release in this repository that will receive the
   asset.
 
-The release receives the executable and its SHA-256 checksum. The upload uses
-`--clobber`, so rerunning the workflow safely replaces assets with the same
-names.
+The release receives a self-contained `.tar.gz` bundle and its SHA-256
+checksum. The upload uses `--clobber`, so rerunning the workflow safely replaces
+assets with the same names.
 
 ## Build script
 
@@ -36,9 +36,17 @@ The workflow runs:
 The script expects Linux, Git, Conan 2, CMake 3.23 or newer, and Ninja. It
 places output in `./dist`, or in the directory specified by `OUTPUT_DIR`.
 It builds the command-line engine without the optional Arcus and plugin
-components and links Conan dependencies statically. The resulting release asset
-does not require Conan-provided shared libraries such as `libtbbmalloc.so.2` to
-be installed on the target machine.
+components. Conan dependencies are linked statically where supported. oneTBB
+only produces shared libraries in this configuration, so those libraries are
+included under `lib/` in the bundle and CuraEngine is given a relative runtime
+path. No system installation of `libtbbmalloc.so.2` is required.
+
+Extract and run the release:
+
+```bash
+tar -xzf CuraEngine-5.13.0-ubuntu-22.04-x86_64.tar.gz
+./CuraEngine-5.13.0-ubuntu-22.04-x86_64/CuraEngine help
+```
 
 The workflow pins Conan and CMake versions and uses GCC 12, which satisfies the
 current CuraEngine recipe. Older CuraEngine releases that use Conan 1 may need
