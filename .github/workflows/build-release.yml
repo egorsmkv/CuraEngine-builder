@@ -1,0 +1,99 @@
+name: Build CuraEngine release binary
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      curaengine_ref:
+        description: CuraEngine branch, tag, or commit to build
+        required: true
+        default: main
+        type: string
+      release_tag:
+        description: Existing release tag to receive the binary
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: curaengine-release-${{ github.event.release.tag_name || inputs.release_tag }}
+  cancel-in-progress: false
+
+jobs:
+  build-and-upload:
+    name: Ubuntu 22.04 x86_64
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+
+    env:
+      CC: gcc-12
+      CXX: g++-12
+      CONAN_HOME: ${{ github.workspace }}/.conan2
+
+    steps:
+      - name: Check out builder
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes gcc-12 g++-12 ninja-build
+          python -m pip install --disable-pip-version-check \
+            conan==2.7.1 \
+            cmake==3.31.6
+
+      - name: Select CuraEngine ref and release
+        id: target
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PUBLISHED_TAG: ${{ github.event.release.tag_name }}
+          INPUT_REF: ${{ inputs.curaengine_ref }}
+          INPUT_RELEASE_TAG: ${{ inputs.release_tag }}
+          CONFIGURED_REF: ${{ vars.CURAENGINE_REF }}
+        run: |
+          if [[ "${EVENT_NAME}" == "release" ]]; then
+            echo "release_tag=${PUBLISHED_TAG}" >>"${GITHUB_OUTPUT}"
+            echo "curaengine_ref=${CONFIGURED_REF:-${PUBLISHED_TAG}}" >>"${GITHUB_OUTPUT}"
+          else
+            echo "release_tag=${INPUT_RELEASE_TAG}" >>"${GITHUB_OUTPUT}"
+            echo "curaengine_ref=${INPUT_REF}" >>"${GITHUB_OUTPUT}"
+          fi
+
+      - name: Build CuraEngine
+        env:
+          OUTPUT_DIR: ${{ github.workspace }}/dist
+          CURAENGINE_REF: ${{ steps.target.outputs.curaengine_ref }}
+        run: ./scripts/build-curaengine.sh "${CURAENGINE_REF}"
+
+      - name: Inspect binary
+        run: |
+          binary="$(find dist -maxdepth 1 -type f -name 'CuraEngine-*' ! -name '*.sha256' -print -quit)"
+          test -n "${binary}"
+          file "${binary}"
+          ldd "${binary}" | tee linked-libraries.txt
+          if grep -q "not found" linked-libraries.txt; then
+            echo "The binary has missing runtime libraries" >&2
+            exit 1
+          fi
+
+      - name: Keep workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: curaengine-ubuntu-22.04-x86_64
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Upload GitHub Release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.target.outputs.release_tag }}
+        run: gh release upload "${RELEASE_TAG}" dist/* --clobber
