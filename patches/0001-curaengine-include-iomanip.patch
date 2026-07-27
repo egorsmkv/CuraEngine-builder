@@ -1,0 +1,12 @@
+diff --git a/src/utils/OBJ.cpp b/src/utils/OBJ.cpp
+index 174021c..b09897d 100644
+--- a/src/utils/OBJ.cpp
++++ b/src/utils/OBJ.cpp
+@@ -3,6 +3,7 @@
+ #include "utils/OBJ.h"
+ 
+ #include <fstream>
++#include <iomanip>
+ #include <unordered_set>
+ 
+ #include <range/v3/algorithm/find.hpp>

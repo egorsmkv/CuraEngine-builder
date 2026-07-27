@@ -5,6 +5,7 @@ set -Eeuo pipefail
 CURAENGINE_REPOSITORY="${CURAENGINE_REPOSITORY:-https://github.com/Ultimaker/CuraEngine.git}"
 CURAENGINE_REF="${1:-${CURAENGINE_REF:-main}}"
 OUTPUT_DIR="${OUTPUT_DIR:-${PWD}/dist}"
+BUILDER_ROOT="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
 
 if [[ "$(uname -s)" != "Linux" ]]; then
     echo "error: this script builds the Linux release binary and must run on Linux" >&2
@@ -49,6 +50,17 @@ fi
 git -C "${source_dir}" checkout --detach FETCH_HEAD
 
 pushd "${source_dir}" >/dev/null
+
+# CuraEngine 5.13.0 uses std::setprecision without directly including the
+# standard <iomanip> header. Some compiler/header combinations expose it
+# transitively, but GCC 12 correctly rejects the source. Apply the compatibility
+# patch only to affected revisions so it remains safe for future releases.
+obj_source="src/utils/OBJ.cpp"
+if grep -q 'std::setprecision' "${obj_source}" \
+    && ! grep -Eq '^[[:space:]]*#[[:space:]]*include[[:space:]]*<iomanip>' "${obj_source}"; then
+    echo "Applying CuraEngine compatibility patch for <iomanip>"
+    git apply "${BUILDER_ROOT}/patches/0001-curaengine-include-iomanip.patch"
+fi
 
 conan config install https://github.com/Ultimaker/conan-config.git
 conan profile detect --force

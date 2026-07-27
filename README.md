@@ -43,3 +43,7 @@ current CuraEngine recipe. Older CuraEngine releases that use Conan 1 may need
 a separate legacy build workflow. Python build-tool versions are kept in
 `requirements-build.txt`, which also provides a stable key for the GitHub
 Actions pip cache.
+
+The build script conditionally applies the compatibility patches in `patches/`.
+For CuraEngine 5.13.0 this adds the missing standard `<iomanip>` include needed
+by its use of `std::setprecision` when compiling with GCC 12.
